@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = import.meta.env.PROD ? 'http://listing-webki-production.up.railway.app/api' : '/api';
+const API_BASE_URL = import.meta.env.PROD ? 'https://listing-webki-production.up.railway.app/api' : '/api';
 
 export interface ListingApiResponse {
   id: string | number;
