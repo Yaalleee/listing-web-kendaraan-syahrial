@@ -1,12 +1,12 @@
 import type { ListingApiResponse } from '../services/api';
-import { getListings } from '../services/api';
+import { getListings, getListingById } from '../services/api';
 
 export interface Car {
   id: string | number;
   brand?: string;
   model?: string;
   year?: number;
-  price: number;
+  price?: number;
   image: string;
   rating?: number;
   reviews?: number;
@@ -17,16 +17,33 @@ export interface Car {
 
 // Convert API response to Car format
 const convertApiToCar = (listing: ListingApiResponse): Car => {
-  const titleParts = listing.title?.split(' ') || [];
-  const brand = titleParts[0] || '';
-  const model = titleParts.slice(1).join(' ') || '';
+  // Extract from metadata if available, fallback to top-level or title parsing
+  const metadata = listing.metadata;
+  let brand = metadata?.brand || '';
+  let model = metadata?.model || '';
+  let price = metadata?.price || listing.price || 0;
+  let year = metadata?.year || new Date(listing.createdAt).getFullYear();
+
+  // If no metadata brand/model, parse from title
+  if (!brand || !model) {
+    const titleParts = listing.title?.split(' ') || [];
+    brand = brand || titleParts[0] || '';
+    model = model || titleParts.slice(1).join(' ') || '';
+  }
+
+  // Ensure price is a valid number
+  if (typeof price === 'string') {
+    price = parseInt(price, 10) || 0;
+  } else {
+    price = Number(price) || 0;
+  }
 
   return {
     id: listing.id,
     brand,
     model,
-    year: new Date(listing.createdAt).getFullYear(),
-    price: listing.price,
+    year,
+    price,
     image: listing.imageUrl || 'https://images.unsplash.com/photo-1606611013016-969c19f27081?w=400&q=80',
     title: listing.title,
     description: listing.description,
@@ -51,9 +68,9 @@ export const fetchCars = async (): Promise<Car[]> => {
 // Fetch single car by ID
 export const fetchCarById = async (id: string | number): Promise<Car | null> => {
   try {
-    const listing = await getListings({ search: id.toString() });
-    if (listing.length > 0) {
-      return convertApiToCar(listing[0]);
+    const listing = await getListingById(id.toString());
+    if (listing) {
+      return convertApiToCar(listing);
     }
     return null;
   } catch (error) {

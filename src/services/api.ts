@@ -2,15 +2,23 @@
 const API_BASE_URL = import.meta.env.PROD ? 'http://listing-webki-production.up.railway.app/api' : '/api';
 
 export interface ListingApiResponse {
-  id: string;
+  id: string | number;
   title: string;
   description: string;
-  price: number;
+  price?: number;
   imageUrl: string;
-  category: string;
-  categoryId: string;
+  category?: string;
+  categoryId?: string | number;
   createdAt: string;
   updatedAt: string;
+  metadata?: {
+    fuel?: string;
+    year?: number;
+    brand?: string;
+    model?: string;
+    price?: number;
+    transmission?: string;
+  };
 }
 
 export interface CategoriesApiResponse {
@@ -115,8 +123,10 @@ export const getListings = async (params?: ListingsQueryParams): Promise<Listing
   return Array.isArray(data) ? data : data.data || [];
 };
 
-export const getListingById = async (id: string): Promise<ListingApiResponse> => {
-  return apiRequest(`/listings/${id}`, { method: 'GET' });
+export const getListingById = async (id: string | number): Promise<ListingApiResponse> => {
+  const data = await apiRequest(`/listings/${id}`, { method: 'GET' });
+  // Handle both direct response and wrapped response
+  return data.data || data || null;
 };
 
 export const createListing = async (listing: Partial<ListingApiResponse>): Promise<ListingApiResponse> => {

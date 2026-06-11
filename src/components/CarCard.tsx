@@ -7,7 +7,7 @@ interface CarCardProps {
   brand: string;
   model: string;
   year: number;
-  price: number;
+  price?: number | string;
   rating?: number;
   reviews?: number;
   onClick?: () => void;
@@ -25,12 +25,29 @@ export default function CarCard({
 }: CarCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number | string | undefined | null) => {
+    // Handle null or undefined
+    if (price === null || price === undefined || price === '') {
+      return 'Rp 0';
+    }
+    
+    // Convert to number if it's a string
+    let numPrice: number;
+    if (typeof price === 'string') {
+      // Remove any non-digit characters except decimal point
+      const cleaned = price.replace(/[^\d.]/g, '');
+      numPrice = parseFloat(cleaned) || 0;
+    } else {
+      numPrice = Number(price) || 0;
+    }
+    
+    // Format in Indonesian Rupiah
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
       minimumFractionDigits: 0,
-    }).format(price);
+      maximumFractionDigits: 0,
+    }).format(numPrice);
   };
 
   const renderStars = (rating: number) => {
