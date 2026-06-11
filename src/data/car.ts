@@ -1,56 +1,85 @@
+import type { ListingApiResponse } from '../services/api';
+import { getListings } from '../services/api';
+
 export interface Car {
-  id: number;
-  name: string;
-  price: string;
-  category: string;
-  description: string;
+  id: string | number;
+  brand?: string;
+  model?: string;
+  year?: number;
+  price: number;
   image: string;
+  rating?: number;
+  reviews?: number;
+  title?: string;
+  description?: string;
+  category?: string;
 }
 
-export const cars: Car[] = [
-  {
-    id: 1,
-    name: "Toyota Avanza",
-    price: "Rp 250.000.000",
-    category: "MPV",
-    description: "mobil keluarga yang nyaman dan luas untuk petualangan Anda bersama keluarga.",
-    image:
-      "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=800"
-  },
-  {
-    id: 2,
-    name: "Honda Civic",
-    price: "Rp 600.000.000",
-    category: "Sedan",
-    description: "Sedan sporty dan elegan.",
-    image:
-      "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800"
-  },
-  {
-    id: 3,
-    name: "Suzuki Ertiga",
-    price: "Rp 230.000.000",
-    category: "MPV",
-    description: "Mobil keluarga hemat BBM.",
-    image:
-      "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800"
-  },
-  {
-    id: 4,
-    name: "Toyota Fortuner",
-    price: "Rp 700.000.000",
-    category: "SUV",
-    description: "SUV tangguh untuk segala medan.",
-    image:
-      "https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=800"
-  },
-  {
-  id: 5,
-  name: "Mitsubishi Pajero Sport",
-  price: "Rp 650.000.000",
-  category: "SUV",
-  description: "SUV premium nyaman dan bertenaga.",
-  image:
-    "https://images.unsplash.com/photo-1606016159991-dfe4f2746ad5?w=800"
-}
-];
+// Convert API response to Car format
+const convertApiToCar = (listing: ListingApiResponse): Car => {
+  const titleParts = listing.title?.split(' ') || [];
+  const brand = titleParts[0] || '';
+  const model = titleParts.slice(1).join(' ') || '';
+
+  return {
+    id: listing.id,
+    brand,
+    model,
+    year: new Date(listing.createdAt).getFullYear(),
+    price: listing.price,
+    image: listing.imageUrl || 'https://images.unsplash.com/photo-1606611013016-969c19f27081?w=400&q=80',
+    title: listing.title,
+    description: listing.description,
+    category: listing.category,
+    rating: 4.5, // Default rating
+    reviews: 0, // Default reviews count
+  };
+};
+
+// Fetch cars from API
+export const fetchCars = async (): Promise<Car[]> => {
+  try {
+    const listings = await getListings({ limit: 12 });
+    return listings.map(convertApiToCar);
+  } catch (error) {
+    console.error('Failed to fetch cars:', error);
+    // Return empty array on error
+    return [];
+  }
+};
+
+// Fetch single car by ID
+export const fetchCarById = async (id: string | number): Promise<Car | null> => {
+  try {
+    const listing = await getListings({ search: id.toString() });
+    if (listing.length > 0) {
+      return convertApiToCar(listing[0]);
+    }
+    return null;
+  } catch (error) {
+    console.error('Failed to fetch car:', error);
+    return null;
+  }
+};
+
+// Search cars by keyword
+export const searchCars = async (keyword: string): Promise<Car[]> => {
+  try {
+    const listings = await getListings({ search: keyword });
+    return listings.map(convertApiToCar);
+  } catch (error) {
+    console.error('Failed to search cars:', error);
+    return [];
+  }
+};
+
+// Filter cars by category
+export const filterCarsByCategory = async (category: string): Promise<Car[]> => {
+  try {
+    const listings = await getListings({ category });
+    return listings.map(convertApiToCar);
+  } catch (error) {
+    console.error('Failed to filter cars:', error);
+    return [];
+  }
+};

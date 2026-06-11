@@ -1,6 +1,7 @@
-import { Routes, Route } from "react-router-dom";
-import Home from "./pages/Home.tsx";
-import CarDetail from "./pages/CarDetail.tsx";
+import { Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
+import CarDetail from './pages/CarDetail';
+import './App.css';
 
 export default function App() {
   return (
